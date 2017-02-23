@@ -27,9 +27,19 @@ class Cache:
 
     print(self.candidates_videos)
 
-  def pick_candidate(self, endpoints, caches):
-    best_index = sorted([(idx, self.candidates_videos[idx])
-                         for idx in self.candidates_videos.keys()], key=lambda t: -t[1])[0]
+  def pick_candidate(self, endpoints, caches, videos):
+
+    while len(self.candidates_videos) > 0:
+        best_index = sorted([(idx, self.candidates_videos[idx])
+                             for idx in self.candidates_videos.keys()], key=lambda t: -t[1])[0]
+        if videos[best_index] > self.capacity:
+            del self.selected_videos[best_index]
+        else:
+            break
+
+    if len(self.candidates_videos) == 0:
+        return False
+
     self.selected_videos.append(best_index)
     del self.selected_videos[best_index]
 
@@ -39,5 +49,6 @@ class Cache:
                                                     cache_index=self.index,
                                                     video_index=best_index,
                                                     already_notified=already_notified)
+    return True
 
 
