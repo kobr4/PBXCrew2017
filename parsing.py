@@ -52,6 +52,11 @@ def parsing(filename):
 
   vs = f.readline().split()
 
+  videolist = {}
+  
+  for i in range(len(vs)):
+    videolist[i] = int(vs[0])
+
   endpointlist = []
   for i in range(p.e):
     li = f.readline().split()
@@ -96,4 +101,10 @@ def parsing(filename):
   return cachelist, oendpointlist
 
 
-parsing("input01.txt")
+cachelist,endpointlist,videolist = parsing("input01.txt")
+
+for endp in endpointlist:
+  print "endpoint {}".format(endp.index)
+  for k in endp.caches_lat: 
+    print "cache latency {}".format(k)
+
