@@ -11,24 +11,17 @@ class Params:
 
 
 class Endp:
-  l = 0
-  k = 0
-  clist = []
+  self.clist = []
   def __init__(self,l,k):
    self.l = l
    self.k = k
 
 class Caches:
-  l = 0
-  c = 0
   def __init__(self,c,l):
     self.l = l
     self.c = c
 
 class Req:
-  rv = 0
-  re = 0
-  rn = 0
   def __init__(self,rv,re,rn):
     self.rv = rv
     self.re = re
@@ -61,14 +54,24 @@ def parsing(filename):
   for i in range(p.e):
     li = f.readline().split()
     endp = Endp(int(li[0]),int(li[1]))
-    print "{} : cache {}".format(i,endp.k)
+    endp.clist = []
+    print "loading endpoint {}".format(i)
     for j in range(endp.k):
       ln = f.readline().split()
       cache = Caches(int(ln[0]),int(ln[1]))
       endp.clist.append(cache)
+      print "cache {}".format(len(endp.clist))
     endpointlist.append(endp)
+<<<<<<< HEAD
 
   reqlist = []
+=======
+
+  for endpoint in endpointlist:
+    print "ep nb cache {}".format(len(endpoint.clist))
+
+  reqlist = []
+>>>>>>> aa8603adcee1b9bd76c3c0a094b51ed6cfdf7f58
   for k in range(p.r):
     lr = f.readline().split()
     rv = int(lr[0])
@@ -94,17 +97,26 @@ def parsing(filename):
   for i in range(p.e):
     oendpointlist.append(Endpoint(i,endpointlist[i].l))
     for cache in endpointlist[i].clist:
+      print "endp {}  = latency {} {}".format(i,cache.c,cache.l)
       oendpointlist[i].add_cache(cache.c,cache.l)
   for req in reqlist:
     oendpointlist[req.re].add_request(req.rv,req.rn)
 
+
   return cachelist, oendpointlist, videolist
+
 
 
 cachelist, endpointlist,videolist = parsing("./data/input01.txt")
 
 for endp in endpointlist:
+
   print "endpoint {}".format(endp.index)
   for k in endp.caches_lat:
     print "cache latency {}".format(k)
+
+  #print "endpoint {} {}".format(endp.index,endp.database_lat)
+  #for k in endp.caches_lat:
+  #  print "cache {} : {} ".format(k, endp.caches_lat[k])
+
 
