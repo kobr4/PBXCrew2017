@@ -78,7 +78,7 @@ def parsing(filename):
 
   cachelist = []
   for i in range(p.c):
-    cachelist.append(Cache(i))
+    cachelist.append(Cache(i,p.x))
 
   for i in range(len(endpointlist)):
     endpoint = endpointlist[i]
@@ -87,7 +87,7 @@ def parsing(filename):
 
   oendpointlist = []
   for i in range(p.e):
-    oendpointlist.append(Endpoint(i))
+    oendpointlist.append(Endpoint(i,endpointlist[i].l))
     for cache in endpointlist[i].clist:
       oendpointlist[i].add_cache(cache.c,cache.l)
   for req in reqlist:
