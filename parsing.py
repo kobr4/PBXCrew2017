@@ -11,24 +11,17 @@ class Params:
 
 
 class Endp:
-  l = 0
-  k = 0
-  clist = []
+  self.clist = []
   def __init__(self,l,k):
    self.l = l
    self.k = k
 
 class Caches:
-  l = 0
-  c = 0
   def __init__(self,c,l):
     self.l = l
     self.c = c
 
 class Req:
-  rv = 0
-  re = 0
-  rn = 0
   def __init__(self,rv,re,rn):
     self.rv = rv
     self.re = re
