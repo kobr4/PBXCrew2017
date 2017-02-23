@@ -3,7 +3,7 @@ import sys
 
 class Cache:
 
-  def _init__(self, index, capacity=None):
+  def __init__(self, index, capacity=None):
     self.index = index
     self.endpoints_indexes = []
     self.candidates_videos = {}
