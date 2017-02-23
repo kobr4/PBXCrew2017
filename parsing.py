@@ -22,6 +22,16 @@ class Caches:
   def __init__(self,c,l):
     self.l = l
     self.c = c
+
+class Req:
+  rv = 0
+  re = 0
+  rn = 0
+  def __init__(self,rv,re,rn):
+    self.rv = rv
+    self.re = re
+    self.rn = rn
+
 vs = []
 
 p = Params()
@@ -48,5 +58,10 @@ for i in range(p.e):
     cache = Caches(ln[0],ln[1])
     endp.clist.append(cache)
   endpointlist.append(endp)
+ 
+reqlist = [] 
+for k in range(p.r):
+  lr = f.readline.split()
+  reqlist.append(Req(rv,re,rn))
 
 print "endpoints = {}".format(endpointlist)
