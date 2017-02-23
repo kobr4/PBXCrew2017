@@ -3,7 +3,7 @@ import sys
 
 class Endpoint:
 
-  def _init__(self, index, db_latency=None):
+  def __init__(self, index, db_latency=None):
     self.index = index
     self.caches_lat = {}
     self.requests_nb = {}
