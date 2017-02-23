@@ -3,7 +3,7 @@ import sys
 
 class Cache:
 
-  def __init__(self, index, capacity=None):
+  def __init__(self, index, capacity=100):
     self.index = index
     self.endpoints_indexes = []
     self.candidates_videos = {}
@@ -19,29 +19,32 @@ class Cache:
   def create_candidate_videos(self, endpoints):
 
     for e in self.endpoints_indexes:
-      for video_index in endpoints[e].request.keys():
+
+      for video_index in endpoints[e].requests_nb:
+        print(">>>>>{} in {}".format(video_index, endpoints[e].requests_nb))
         if video_index not in self.candidates_videos:
           self.candidates_videos[video_index] = 0
+
         self.candidates_videos[video_index] += endpoints[e].\
                                                get_video_scores(self.index, video_index)
 
-    print(self.candidates_videos)
+    print("next {} ".format(self.candidates_videos))
 
   def pick_candidate(self, endpoints, caches, videos):
 
     while len(self.candidates_videos) > 0:
-        best_index = sorted([(idx, self.candidates_videos[idx])
-                             for idx in self.candidates_videos.keys()], key=lambda t: -t[1])[0]
+        best_index, best_score = sorted([(idx, self.candidates_videos[idx])
+                                 for idx in self.candidates_videos.keys()], key=lambda t: -t[1])[0]
         if videos[best_index] > self.capacity:
-            del self.selected_videos[best_index]
+            del self.candidates_videos[best_index]
         else:
             break
 
     if len(self.candidates_videos) == 0:
         return False
 
-    self.selected_videos.append(best_index)
-    del self.selected_videos[best_index]
+    self.selected_videos.append((best_index, best_score))
+    del self.candidates_videos[best_index]
 
     already_notified = []
     for e in self.endpoints_indexes:
@@ -51,4 +54,8 @@ class Cache:
                                                     already_notified=already_notified)
     return True
 
-
+  def get_scores(self):
+    sum_ = 0
+    for i, v in self.selected_videos:
+      sum_ += v
+    return sum_

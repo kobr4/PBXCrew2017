@@ -46,7 +46,7 @@ def parsing(filename):
   vs = f.readline().split()
 
   videolist = {}
-  
+
   for i in range(len(vs)):
     videolist[i] = int(vs[0])
 
@@ -62,11 +62,16 @@ def parsing(filename):
       endp.clist.append(cache)
       print "cache {}".format(len(endp.clist))
     endpointlist.append(endp)
- 
+<<<<<<< HEAD
+
+  reqlist = []
+=======
+
   for endpoint in endpointlist:
     print "ep nb cache {}".format(len(endpoint.clist))
 
-  reqlist = [] 
+  reqlist = []
+>>>>>>> aa8603adcee1b9bd76c3c0a094b51ed6cfdf7f58
   for k in range(p.r):
     lr = f.readline().split()
     rv = int(lr[0])
@@ -97,13 +102,21 @@ def parsing(filename):
   for req in reqlist:
     oendpointlist[req.re].add_request(req.rv,req.rn)
 
-  return cachelist, oendpointlist,videolist
+
+  return cachelist, oendpointlist, videolist
 
 
-cachelist,endpointlist,videolist = parsing("input01.txt")
+
+cachelist, endpointlist,videolist = parsing("./data/input01.txt")
 
 for endp in endpointlist:
-  print "endpoint {} {}".format(endp.index,endp.database_lat)
-  for k in endp.caches_lat: 
-    print "cache {} : {} ".format(k, endp.caches_lat[k])
+
+  print "endpoint {}".format(endp.index)
+  for k in endp.caches_lat:
+    print "cache latency {}".format(k)
+
+  #print "endpoint {} {}".format(endp.index,endp.database_lat)
+  #for k in endp.caches_lat:
+  #  print "cache {} : {} ".format(k, endp.caches_lat[k])
+
 
