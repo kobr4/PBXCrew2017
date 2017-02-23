@@ -40,7 +40,7 @@ def parsing(filename):
 
   p = Params()
 
-  f = open(sys.argv[1])
+  f = open(filename)
   l1 = f.readline().split()
   p.v = int(l1[0])
   p.e = int(l1[1])
@@ -59,7 +59,7 @@ def parsing(filename):
     print "{} : cache {}".format(i,endp.k)
     for j in range(endp.k):
       ln = f.readline().split()
-      cache = Caches(ln[0],ln[1])
+      cache = Caches(int(ln[0]),int(ln[1]))
       endp.clist.append(cache)
     endpointlist.append(endp)
  
@@ -74,7 +74,7 @@ def parsing(filename):
   print "endpoints = {}".format(endpointlist)
   print "requests= {}".format(reqlist)
 
-  close(f)
+  f.close()
 
   cachelist = []
   for i in range(p.c):
@@ -82,15 +82,18 @@ def parsing(filename):
 
   for i in range(len(endpointlist)):
     endpoint = endpointlist[i]
-    for caches in endoint.clist
-      cachelist[caches.c].add_endpoints(i)
+    for caches in endpoint.clist:
+      cachelist[caches.c].add_endpoint(i)
 
-
+  oendpointlist = []
   for i in range(p.e):
     oendpointlist.append(Endpoint(i))
-    for cache in endpointlist[i].clist
+    for cache in endpointlist[i].clist:
       oendpointlist[i].add_cache(cache.c,cache.l)
-    for req in reqlist
-      oendpointlist[req.re].add_request(req.rv,req.rn)
+  for req in reqlist:
+    oendpointlist[req.re].add_request(req.rv,req.rn)
 
   return cachelist, oendpointlist
+
+
+parsing("input01.txt")
