@@ -1,5 +1,7 @@
 import sys
 
+from data_models import Cache, Endpoint
+
 class Params:
   v = 0
   e = 0
@@ -32,36 +34,53 @@ class Req:
     self.re = re
     self.rn = rn
 
-vs = []
+def parsing(filename):
 
-p = Params()
+  vs = []
 
-f = open(sys.argv[1])
-l1 = f.readline().split()
-p.v = int(l1[0])
-p.e = int(l1[1])
-p.r = int(l1[2])
-p.c = int(l1[3])
-p.x = int(l1[4])
+  p = Params()
 
-print "v = {}; e = {}; r = {}; c = {}; x = {}".format(p.v,p.e,p.r,p.c,p.x)
+  f = open(sys.argv[1])
+  l1 = f.readline().split()
+  p.v = int(l1[0])
+  p.e = int(l1[1])
+  p.r = int(l1[2])
+  p.c = int(l1[3])
+  p.x = int(l1[4])
 
-vs = f.readline().split()
+  print "v = {}; e = {}; r = {}; c = {}; x = {}".format(p.v,p.e,p.r,p.c,p.x)
 
-endpointlist = []
-for i in range(p.e):
-  li = f.readline().split()
-  endp = Endp(int(li[0]),int(li[1]))
-  print "{} : cache {}".format(i,endp.k)
-  for j in range(endp.k):
-    ln = f.readline().split()
-    cache = Caches(ln[0],ln[1])
-    endp.clist.append(cache)
-  endpointlist.append(endp)
+  vs = f.readline().split()
+
+  endpointlist = []
+  for i in range(p.e):
+    li = f.readline().split()
+    endp = Endp(int(li[0]),int(li[1]))
+    print "{} : cache {}".format(i,endp.k)
+    for j in range(endp.k):
+      ln = f.readline().split()
+      cache = Caches(ln[0],ln[1])
+      endp.clist.append(cache)
+    endpointlist.append(endp)
  
-reqlist = [] 
-for k in range(p.r):
-  lr = f.readline.split()
-  reqlist.append(Req(rv,re,rn))
+  reqlist = [] 
+  for k in range(p.r):
+    lr = f.readline().split()
+    rv = int(lr[0])
+    re = int(lr[1])
+    rn = int(lr[2])
+    reqlist.append(Req(rv,re,rn))
 
-print "endpoints = {}".format(endpointlist)
+  print "endpoints = {}".format(endpointlist)
+  print "requests= {}".format(reqlist)
+
+  close(f)
+
+  cachelist = []
+  for i in range(p.c):
+    cachelist.append(Cache(i))
+
+  for i in range(len(endpointlist)):
+    endpoint = endpointlist[i]
+    for caches in endoint.clist
+      cachelist[caches.c].add_endpoints(i)
