@@ -84,3 +84,13 @@ def parsing(filename):
     endpoint = endpointlist[i]
     for caches in endoint.clist
       cachelist[caches.c].add_endpoints(i)
+
+
+  for i in range(p.e):
+    oendpointlist.append(Endpoint(i))
+    for cache in endpointlist[i].clist
+      oendpointlist[i].add_cache(cache.c,cache.l)
+    for req in reqlist
+      oendpointlist[req.re].add_request(req.rv,req.rn)
+
+  return cachelist, oendpointlist
