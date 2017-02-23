@@ -11,10 +11,10 @@ class Params:
 
 
 class Endp:
-  self.clist = []
   def __init__(self,l,k):
    self.l = l
    self.k = k
+   self.clist = []
 
 class Caches:
   def __init__(self,c,l):
