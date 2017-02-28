@@ -10,4 +10,4 @@ Dynamic solution with served request propagation/flagging
 | videos_worth_spreading.in | 533895         | 538999         | 539011            |
 | kittens.in                | 664952         | 842618         | 843235            |
 | me_at_the_zoo.in          | 454342         | 484496         | 485719            |
-| total / theoritical rank  | 2000188 #~1500 | 2366082 #~215  | 2367954 #~215     |
+| total / theoritical rank  | 2000188 #~600 | 2366082 #~215  | 2367954 #~215     |
