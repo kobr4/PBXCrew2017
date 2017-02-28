@@ -1,6 +1,6 @@
 # PBXCrew2017
 
-CPP solver that did not make it
+CPP solver that did not make it to Google Hashcode 2017 qualification contest
 
 Dynamic solution with served request propagation/flagging
 
