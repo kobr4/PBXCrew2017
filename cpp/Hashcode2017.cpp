@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
  int v;
@@ -18,7 +19,7 @@ typedef struct {
 
 typedef struct {
   int latency;
-  int cache_srv;
+  int concount;
   T_CONNECTION * conlist;
 } T_ENDPOINT;
 
@@ -28,6 +29,7 @@ typedef struct {
   int endid;
   int nreq;
   int vsize;
+  char served;
 } T_REQUEST;
 
 
@@ -39,16 +41,13 @@ typedef struct {
 
 int * vsize;
 
-
 T_CACHE * init_cache(T_PARAMS params) {
 	T_CACHE * cachelist = (T_CACHE*)malloc(sizeof(T_CACHE)*params.c);
-
 	for (int i = 0;i < params.c;i++) {
 		cachelist[i].vcount = 0;
 		cachelist[i].vlist = (int *)malloc(sizeof(int)*params.v);
 		cachelist[i].free = params.x;
 	}
-
 	return cachelist;
 }
 
@@ -57,7 +56,6 @@ int add_video(T_CACHE * cachelist,int i, int vid,int w) {
 	cachelist[i].vlist[cachelist[i].vcount] = vid;
 	cachelist[i].vcount++;
 	cachelist[i].free -= w;
-
 	return 0;
 }
 
@@ -75,60 +73,10 @@ int read_int(FILE * f) {
 	return atoi(str);
 }
 
-int compare2(void const *a, void const *b) {
-	T_REQUEST * req1 = (T_REQUEST*)a;
-	T_REQUEST * req2 = (T_REQUEST*)b;
-	return (req2->nreq * req1->vsize) - (req1->nreq * req2->vsize);
-}
-
 int compare(void const *a, void const *b) {
 	T_REQUEST * req1 = (T_REQUEST*)a;
 	T_REQUEST * req2 = (T_REQUEST*)b;
 	return req2->nreq - req1->nreq;
-}
-
-// Greedy solver
-void solver(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACHE * cachelist, int * vsize, int (*compare) (void const *a, void const *b)) {
-	qsort(reqlist,g_params.r,sizeof(T_REQUEST),compare);
-	for (int i=0;i<g_params.r;i++) {
-		T_REQUEST req = reqlist[i];
-		int l = endpointlist[req.endid].latency;
-		int cid = -1;
-		for (int j = 0;j < endpointlist[req.endid].cache_srv;j++) {
-			T_CONNECTION con = endpointlist[req.endid].conlist[j];
-			if (l > con.latency) {
-				l = con.latency;
-				cid = con.cid;
-			}
-		}
-
-		if (cid != -1) add_video(cachelist,cid,req.vid,vsize[req.vid]);
-	}
-}
-
-unsigned int get_endpoint_latency(T_ENDPOINT endp,int cid) {
-	int latency = endp.latency;
-	for (int i=0;i<endp.cache_srv;i++) {
-		if (endp.conlist[i].cid == cid) {
-			if (latency > endp.conlist[i].latency) {
-				latency =  endp.conlist[i].latency;
-			}
-		}
-	}
-	return endp.latency-latency;
-}
-
-double score_cache(T_REQUEST * reqlist,T_ENDPOINT * endpointlist,int vid, int cid) {
-	double acc = 0;
-	for (int i = 0;i < g_params.r;i++) {
-		
-		if (reqlist[i].vid == vid) {
-			acc += get_endpoint_latency(endpointlist[reqlist[i].endid], cid) * reqlist[i].nreq;
-		}
-		
-	}
-	
-	return acc;
 }
 
 int cache_contains(T_CACHE cache, int vid) {
@@ -145,7 +93,7 @@ double score_cache(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACHE * cac
 			unsigned int l = endpointlist[reqlist[i].endid].latency;
 
 		
-			for (int j = 0;j < endpointlist[reqlist[i].endid].cache_srv;j++) {
+			for (int j = 0;j < endpointlist[reqlist[i].endid].concount;j++) {
 			
 				T_CONNECTION con = endpointlist[reqlist[i].endid].conlist[j];
 			
@@ -166,8 +114,7 @@ double score_cache(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACHE * cac
 	return sc;
 }
 
-double delta_score_cache(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACHE * cachelist,int cid,int vid, double ori_sc) {
-	
+double delta_score_cache(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACHE * cachelist,int cid,int vid, double ori_sc) {	
 	cachelist[cid].vlist[cachelist[cid].vcount] = vid;
 	cachelist[cid].vcount++;
 	double sc = score_cache(reqlist,endpointlist,cachelist,vid) - ori_sc;
@@ -175,39 +122,44 @@ double delta_score_cache(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACHE
 	return sc;
 }
 
-// Per video solver
-void solverV(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACHE * cachelist, int * vsize, int (*compare) (void const *a, void const *b)) {
-	double score = 0;
-	int selec_v = 0;
-	int selec_c = 0;
-	double global_score = 0.;
-	do {
-		score = 0;
-		selec_v = 0;
-		selec_c =0;
-		for (int i = 0;i < g_params.v;i++) {
-			printf("Analyze video %d/%d nb cache=%d score=%.0f global=%.0f\n",i,g_params.v,g_params.c,score,global_score);
-			double ori_sc = score_cache(reqlist,endpointlist,cachelist,i);
-			for (int k = 0;k < g_params.c;k++) {
-				if ((cachelist[k].free > vsize[i]) && !cache_contains(cachelist[k],i)) {
-					
-					//double curr_score = score_cache(g_params, reqlist,endpointlist,i,k);
-					double curr_score = delta_score_cache(reqlist, endpointlist, cachelist,k,i,ori_sc);
-					if (curr_score > score) {
-						score = curr_score;
-						selec_v = i;
-						selec_c = k;
-					}
-					
+void propagate(T_REQUEST * reqlist,T_ENDPOINT * endpointlist,int cid, int vid) {
+	for (int i = 0;i < g_params.r;i++) {
+		if (reqlist[i].vid == vid) {
+			T_ENDPOINT endp = endpointlist[reqlist[i].endid];
+			for (int j = 0;j < endp.concount;j++) {
+				if (endp.conlist[j].cid == cid) {
+					reqlist[i].served = 1;
 				}
 			}
 		}
-		if (score != 0) {
-			printf("Adding video : %d to cache %d score=%.0f\n",selec_v,selec_c,score);
-			add_video(cachelist,selec_c,selec_v,vsize[selec_v]);
-			global_score += score;
+	}
+}
+
+void solverR(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACHE * cachelist, int * vsize, int (*compare) (void const *a, void const *b)) {
+	qsort(reqlist,g_params.r,sizeof(T_REQUEST),compare);
+	for (int i=0;i<g_params.r;i++) {
+		if (reqlist[i].served == 1) 
+			continue;
+
+		double score = 0;
+		int selec_c = 0;
+		int vid = reqlist[i].vid;
+		printf("Analyze request %d/%d nb cache=%d score=%.0f\n",i,g_params.r,g_params.c,score);
+		double ori_sc = score_cache(reqlist,endpointlist,cachelist,i);
+		for (int k = 0;k < g_params.c;k++) {
+			if ((cachelist[k].free > vsize[vid]) && !cache_contains(cachelist[k],vid)) {
+				double curr_score = delta_score_cache(reqlist, endpointlist, cachelist,k,vid,ori_sc);
+				if (curr_score > score) {
+					score = curr_score;
+					selec_c = k;
+				}				
+			}
 		}
-	} while (score != 0);
+		if (score != 0) {
+			add_video(cachelist,selec_c,vid,vsize[vid]);
+			propagate(reqlist,endpointlist,selec_c,vid);
+		}
+	}
 }
 
 
@@ -218,7 +170,7 @@ unsigned int score_simple(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACH
 		unsigned int l = endpointlist[reqlist[i].endid].latency;
 
 		
-		for (int j = 0;j < endpointlist[reqlist[i].endid].cache_srv;j++) {
+		for (int j = 0;j < endpointlist[reqlist[i].endid].concount;j++) {
 			
 			T_CONNECTION con = endpointlist[reqlist[i].endid].conlist[j];
 			
@@ -241,8 +193,8 @@ unsigned int score_simple(T_REQUEST * reqlist, T_ENDPOINT * endpointlist, T_CACH
 
 
 
-void output_solution(T_PARAMS g_params,T_CACHE * cachelist) {
-	FILE * f = fopen("result.txt","w");
+void output_solution(T_PARAMS g_params,T_CACHE * cachelist, char * filename) {
+	FILE * f = fopen(filename,"w");
 
 	int count = 0;
 	for (int i = 0;i < g_params.c;i++) {
@@ -253,7 +205,7 @@ void output_solution(T_PARAMS g_params,T_CACHE * cachelist) {
 
 	for (int i = 0;i < g_params.c;i++) {
 		if (cachelist[i].vcount > 0) {
-			fprintf(f,"%d",i);
+			fprintf(f,"%d",i+1);
 			for (int j = 0;j < cachelist[i].vcount;j++) {
 				fprintf(f," %d",cachelist[i].vlist[j]);
 			}
@@ -280,9 +232,9 @@ int main(int argc, char **argv) {
 	T_ENDPOINT * endpointlist = (T_ENDPOINT*)malloc(sizeof(T_ENDPOINT)*g_params.e);
 
 	for (int i = 0;i < g_params.e;i++) {
-		fscanf(f,"%d %d\n",&endpointlist[i].latency,&endpointlist[i].cache_srv);
-		endpointlist[i].conlist = (T_CONNECTION*)malloc(sizeof(T_CONNECTION)*endpointlist[i].cache_srv);
-		for (int j = 0;j < endpointlist[i].cache_srv;j++) {
+		fscanf(f,"%d %d\n",&endpointlist[i].latency,&endpointlist[i].concount);
+		endpointlist[i].conlist = (T_CONNECTION*)malloc(sizeof(T_CONNECTION)*endpointlist[i].concount);
+		for (int j = 0;j < endpointlist[i].concount;j++) {
 			fscanf(f,"%d %d\n",&endpointlist[i].conlist[j].cid,&endpointlist[i].conlist[j].latency);
 		}
 	}
@@ -292,25 +244,24 @@ int main(int argc, char **argv) {
 	for (int i = 0;i < g_params.r;i++) {
 		fscanf(f,"%d %d %d\n",&reqlist[i].vid,&reqlist[i].endid,&reqlist[i].nreq);
 		reqlist[i].vsize = vsize[reqlist[i].vid];
+		reqlist[i].served = 0;
 	}
 	fclose(f);
 
-	for (int i = 0;i < g_params.v;i++) {
-		//printf("video %d : %d\n",i,vsize[i]);
-	}
-
-	for (int i = 0;i < g_params.e;i++) {
-		//printf("endpoint %d : latency : %d\n",i, endpointlist[i].latency);
-	}
 
 	T_CACHE * cachelist = init_cache(g_params);
 
-	//solver(g_params,reqlist,endpointlist,cachelist,vsize,&compare);
-	solverV(reqlist,endpointlist,cachelist,vsize,&compare);
+	solverR(reqlist,endpointlist,cachelist,vsize,&compare);
+	for (int i = 0;i < g_params.r;i++) {
+		reqlist[i].served = 0;
+	}
 
 	printf("SOLVED\n");
-
-	printf("Score: %d\n",score_simple(reqlist,endpointlist,cachelist));
-	output_solution(g_params,cachelist);
+	unsigned int score = score_simple(reqlist,endpointlist,cachelist);
+	printf("Score: %d\n",score);
+	
+	char str[255];
+	sprintf(str,"%s.%d.txt",argv[1],score);
+	output_solution(g_params,cachelist,str);
 	return 0;
 }
